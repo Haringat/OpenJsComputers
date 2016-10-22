@@ -1,0 +1,16 @@
+[
+{
+  "modid": "OpenJsComputers",
+  "name": "OpenJsComputers",
+  "description": "Adds js-driven computers to OpenComputers",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://www.github.com/Haringat/OpenJsComputers",
+  "updateUrl": "",
+  "authorList": ["Haringat"],
+  "credits": "eclipsesource for J2V8 and MightyPirates for OpenComputers",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": ["OpenComputers"]
+}
+]
