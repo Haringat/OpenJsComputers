@@ -3,13 +3,13 @@ package com.github.haringat.oc.v8;
 import com.eclipsesource.v8.*;
 import com.github.haringat.OpenJsComputers;
 import com.github.haringat.oc.JSArchitecture;
-import com.github.haringat.oc.api.IApi;
 import com.github.haringat.oc.v8.api.Component;
 import com.github.haringat.oc.v8.api.Console;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Signal;
 import net.minecraft.nbt.NBTTagCompound;
+import org.lwjgl.Sys;
 
 @V8Architecture.Name("JSV8")
 public class V8Architecture extends JSArchitecture {
@@ -24,22 +24,29 @@ public class V8Architecture extends JSArchitecture {
     public boolean initialize() {
         this.v8 = V8.createV8Runtime();
         this.apis.add(new Console(this.v8));
-        this.apis.add(new Component(this.v8));
-        this.v8.executeVoidScript("console.log(\"Hallo Welt from wrapped native API!\");");
-
-        /*V8Object component = new V8Object(this.v8);
-        component.registerJavaMethod(new JavaCallback() {
-            @Override
-            public Object invoke(V8Object receiver, V8Array parameters) {
-                return null;
+        this.apis.add(new Component(this.v8, this.machine));
+        //this.v8.executeVoidScript("console.log(\"Hallo Welt from wrapped native API!\");");
+        for(String address: this.machine.components().keySet()) {
+            if (this.machine.components().get(address).equals("eeprom")) {
+                try {
+                    this.v8.executeScript(new String((byte[]) this.machine.invoke(address, "get", new Object[]{})[0]));
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    for (StackTraceElement line: e.getStackTrace()) {
+                        System.out.println(line);
+                    }
+                    this.machine.crash(e.getMessage());
+                    return false;
+                }
             }
-        }, "invoke");
-        V8Function component_invoke = new V8Function(this.v8, new JavaCallback() {
-            @Override
-            public Object invoke(V8Object receiver, V8Array parameters) {
-                return null;
-            }
-        });*/
+        }
+        //this.v8.executeScript("(() => {component.invoke(\"eeprom\", );})();");
+        /*try {
+            this.v8.executeScript((String) this.machine.invoke("eeprom", "get", new Object[]{})[0]);
+        } catch (Exception e) {
+            this.machine.crash("no bios found");
+            return false;
+        }*/
         this.initialized = true;
         return this.isInitialized();
     }
@@ -49,6 +56,7 @@ public class V8Architecture extends JSArchitecture {
         this.v8.terminateExecution();
         super.close();
         this.v8.release();
+        this.initialized = false;
     }
 
     @Override
@@ -85,11 +93,11 @@ public class V8Architecture extends JSArchitecture {
 
     @Override
     public void load(NBTTagCompound nbt) {
-        OpenJsComputers.logger.info(nbt.toString());
+        //this.machine.load(nbt);
     }
 
     @Override
     public void save(NBTTagCompound nbt) {
-        OpenJsComputers.logger.info(nbt.toString());
+        //this.machine.save(nbt);
     }
 }

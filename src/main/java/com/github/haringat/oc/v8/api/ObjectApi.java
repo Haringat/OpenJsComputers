@@ -8,7 +8,16 @@ public abstract class ObjectApi extends ApiBase {
     protected V8Object api;
 
     public ObjectApi(V8 v8, String name) {
-        this.api = new V8Object(v8);
-        v8.add(name, this.api);
+        super(v8, name);
+    }
+
+    public void setupApi() {
+        this.api = new V8Object(this.v8);
+        this.v8.add(this.name, this.api);
+    }
+
+    public void release() {
+        this.api.release();
+        this.api = null;
     }
 }

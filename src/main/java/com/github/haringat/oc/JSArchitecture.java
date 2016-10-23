@@ -44,5 +44,6 @@ public abstract class JSArchitecture implements Architecture {
         for (IApi api: this.apis) {
             api.release();
         }
+        this.apis.clear();
     }
 }
