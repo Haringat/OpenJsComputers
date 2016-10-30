@@ -9,11 +9,14 @@ import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import li.cil.oc.api.Items;
 import li.cil.oc.api.Machine;
+import li.cil.oc.api.FileSystem;
+import org.lwjgl.util.Color;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.Callable;
 
 @SuppressWarnings("WeakerAccess")
 @Mod(
@@ -41,7 +44,7 @@ public class OpenJsComputers {
         OpenJsComputers.logger.info("OpenJsComputers is initializing...");
         Machine.add(V8Architecture.class);
 
-        InputStream in = getClass().getResourceAsStream("/assets/openjscomputers/bios.js");
+        InputStream in = getClass().getResourceAsStream("/assets/OpenJsComputers/bios.js");
         BufferedReader input = new BufferedReader(new InputStreamReader(in));
         String bios = "";
         String line;
@@ -54,6 +57,13 @@ public class OpenJsComputers {
             e.printStackTrace();
         }
         Items.registerEEPROM("EEPROM (JavaScript BIOS)", bios.getBytes(), new byte[]{}, true);
+        int blue = Color.BLUE.getRedByte() << 16 | Color.BLUE.getGreenByte() << 8 | Color.BLUE.getBlueByte();
+        Items.registerFloppy("JSOS (JavaScript OS)", blue, new Callable<li.cil.oc.api.fs.FileSystem>() {
+            @Override
+            public li.cil.oc.api.fs.FileSystem call() throws Exception {
+                return FileSystem.fromClass(OpenJsComputers.class, OpenJsComputers.MODID, "jsos");
+            }
+        });
     }
 
     @EventHandler

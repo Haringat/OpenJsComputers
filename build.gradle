@@ -15,6 +15,7 @@ buildscript {
     }
 }
 
+
 apply plugin: 'forge'
 
 file "build.properties" withReader {
@@ -22,20 +23,6 @@ file "build.properties" withReader {
     prop.load(it)
     ext.config = new ConfigSlurper().parse prop
 }
-
-/*project.extensions.add("ojsc_meta", {
-    name = "OpenJsComputers"
-    modid = "openjscomputers"
-    modversion = "0.0.1"
-    mcversion = "1.7.10"
-    version = "${mcversion}-${modversion}"
-})*/
-/*project.extensions.add("ojsc_meta", {})
-ojsc_meta.name = "OpenJsComputers"
-ojsc_meta.modid = "openjscomputers"
-ojsc_meta.modversion = "0.0.1"
-ojsc_meta.mcversion = "1.7.10"
-ojsc_meta.version = "${mcversion}-${modversion}"*/
 
 version = "${config.minecraft.version}-${config.ocjs.version}"
 group = "com.github.haringat" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -50,6 +37,11 @@ minecraft {
     replace("\${OJSC_MODID}", config.ocjs.modid)
 }
 
+configurations {
+    embed
+    compile.extendsFrom(embed)
+}
+
 repositories {
     maven {
         name = "j2v8"
@@ -62,7 +54,10 @@ repositories {
 }
 
 dependencies {
-    compile "com.eclipsesource.j2v8:j2v8_linux_x86_64:${config.j2v8.version}"
+    embed "com.eclipsesource.j2v8:j2v8_macosx_x86_64:${config.j2v8.version}"
+    embed "com.eclipsesource.j2v8:j2v8_linux_x86_64:${config.j2v8.version}"
+    embed "com.eclipsesource.j2v8:j2v8_win32_x86:${config.j2v8.version}"
+    embed "com.eclipsesource.j2v8:j2v8_win32_x86_64:${config.j2v8.version}"
     compile "li.cil.oc:OpenComputers:${config.oc.version}:dev"
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
@@ -77,6 +72,10 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
+}
+
+jar {
+    from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
 }
 
 processResources
