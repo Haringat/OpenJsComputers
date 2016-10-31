@@ -19,19 +19,9 @@
     if (!gpu) {
         system.crash("no gpu found.");
     }
-    for (let key in screen) {
-        if (screen.hasOwnProperty(key)) {
-            console.log("gpu address: " + screen.address);
-            console.log("screen[" + key + "]: " + typeof screen[key]);
-        }
-    }
-    for (let key in screen) {
-        if (screen.hasOwnProperty(key)) {
-            console.log("gpu address: " + gpu.address);
-            console.log("gpu[" + key + "]: " + typeof screen[key]);
-        }
-    }
     screen.turnOn();
     gpu.bind(screen.address, true);
-    gpu.fill(0, 0, 10, 10, "x");
+    setTimeout(() => {
+        gpu.fill(0, 0, 10, 10, "x");
+    }, 1000);
 })(component);

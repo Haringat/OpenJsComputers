@@ -27,7 +27,6 @@ import java.util.concurrent.Callable;
 )
 public class OpenJsComputers {
 
-    public static LogHelper logger = new LogHelper(OpenJsComputers.NAME);
     public static final String MODID = "${OJSC_MODID}";
     public static final String NAME = "${OJSC_NAME}";
     public static final String VERSION = "${OJSC_VERSION}";
@@ -36,12 +35,12 @@ public class OpenJsComputers {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        OpenJsComputers.logger.info("OpenJsComputers version " + OpenJsComputers.VERSION + " is preinitializing...");
+        LogHelper.info("OpenJsComputers version " + OpenJsComputers.VERSION + " is preinitializing...");
     }
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
-        OpenJsComputers.logger.info("OpenJsComputers is initializing...");
+        LogHelper.info("OpenJsComputers is initializing...");
         Machine.add(V8Architecture.class);
 
         InputStream in = getClass().getResourceAsStream("/assets/OpenJsComputers/bios.js");
@@ -68,7 +67,7 @@ public class OpenJsComputers {
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        OpenJsComputers.logger.info("OpenJsComputers is initialized.");
+        LogHelper.info("OpenJsComputers is initialized.");
     }
 
 }

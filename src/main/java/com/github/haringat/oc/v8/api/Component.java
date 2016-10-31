@@ -1,54 +1,32 @@
 package com.github.haringat.oc.v8.api;
 
 import com.eclipsesource.v8.*;
-import com.github.haringat.OpenJsComputers;
-import li.cil.oc.api.Driver;
-import li.cil.oc.api.driver.Item;
+import com.github.haringat.LogHelper;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Machine;
-import net.minecraft.item.ItemStack;
+import li.cil.oc.api.network.Node;
 
 import static com.eclipsesource.v8.utils.V8ObjectUtils.*;
 
 import java.lang.*;
-import java.lang.System;
 import java.util.*;
 
 public class Component extends ApiBase {
 
-    private Map<String, V8Object> primaries;
-
     public Component(V8 v8, Machine machine) {
         super(v8, "component", machine);
-        this.refreshPrimaries();
-    }
-
-    public void refreshPrimaries() {
-        Map<String, String> componentList = this.machine.components();
-        // remove all primaries from the list which are not accessible anymore
-        Iterator<String> typeIterator = this.primaries.keySet().iterator();
-        while (typeIterator.hasNext()) {
-            String type = typeIterator.next();
-            if (!componentList.values().contains(this.primaries.get(type).getString("address"))) {
-                typeIterator.remove();
-            }
-        }
-        // add all types which are accessible but do not have a primary in the list
-        for (String address : componentList.keySet()) {
-            if (!this.primaries.keySet().contains(componentList.get(address))) {
-                this.primaries.put(componentList.get(address), this.proxy(address));
-            }
-        }
     }
 
     @Override
     protected void setupApi() {
         super.setupApi();
-        this.primaries = new HashMap<String, V8Object>();
         final Component _this = this;
         this.api.registerJavaMethod(new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
+                if (parameters.length() < 2 || parameters.getType(0) != V8Value.STRING || parameters.getType(1) != V8Value.STRING) {
+                    throw new IllegalArgumentException("component.invoke(string, string, ...string): Array<any>");
+                }
                 Object[] varargs = new Object[parameters.length() - 2];
                 for (int i = 2; i < parameters.length(); i++) {
                     varargs[i - 2] = parameters.get(i);
@@ -59,9 +37,9 @@ public class Component extends ApiBase {
                     Collections.addAll(resultList, results);
                     return toV8Array(_this.v8, resultList);
                 } catch (Exception e) {
-                    OpenJsComputers.logger.error(e.getMessage());
+                    LogHelper.error(e.getMessage());
                     for (StackTraceElement line: e.getStackTrace()) {
-                        OpenJsComputers.logger.error(line);
+                        LogHelper.error(line);
                     }
                     _this.machine.crash(e.getMessage());
                 }
@@ -77,66 +55,83 @@ public class Component extends ApiBase {
         this.api.registerJavaMethod(new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
-                final String address;
-                if (parameters.length() > 0 && parameters.getType(0) == V8Value.STRING) {
-                    address = parameters.getString(0);
-                } else {
-                    return null;
+                if (parameters.length() < 1 || parameters.getType(0) != V8Value.STRING) {
+                    throw new IllegalArgumentException("component.getPrimary(string): {[key: string]: string}");
                 }
-                return _this.proxy(address);
+                Map<String, String> components = _this.machine.components();
+                for(String address: components.keySet()) {
+                    if (components.get(address).equals(parameters.getString(0))) {
+                        return _this.proxy(address);
+                    }
+                }
+                return null;
+            }
+        }, "getPrimary");
+        this.api.registerJavaMethod(new JavaCallback() {
+            @Override
+            public Object invoke(V8Object receiver, V8Array parameters) {
+                if (parameters.length() < 1 || parameters.getType(0) != V8Value.STRING) {
+                    throw new IllegalArgumentException("component.proxy(string): Object");
+                }
+                return _this.proxy(parameters.getString(0));
             }
         }, "proxy");
         this.api.registerJavaMethod(new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
-                if (parameters.length() == 0 || parameters.getType(0) != V8Value.STRING) {
+                if (parameters.length() < 1 || parameters.getType(0) != V8Value.STRING) {
+                    throw new IllegalArgumentException("Component.methods(string):Array<string>");
+                }
+                Map<String, Callback> methods = _this.methods(parameters.getString(0));
+                if (methods != null) {
+                    return toV8Array(_this.v8, new ArrayList<String>(methods.keySet()));
+                } else {
                     return null;
                 }
-                return _this.primaries.get(parameters.getString(0));
             }
-        }, "getPrimary");
-        this.refreshPrimaries();
+        }, "methods");
     }
 
     private V8Object proxy(final String address) {
         final Component _this = this;
-        System.out.println("proxying address " + address);
         V8Object proxy = new V8Object(this.v8);
-        for (ItemStack itemStack : this.machine.host().internalComponents()) {
-            Item itemDriver = Driver.driverFor(itemStack);
-        }
-        Map<String, Callback> methods = this.machine.methods();
-        for (final String key: methods.keySet()) {
-            System.out.println("has method " + key);
-            if (!methods.get(key).getter() && !methods.get(key).setter()) {
-                System.out.println("is neither a setter nor a getter");
-                proxy.registerJavaMethod(new JavaCallback() {
-                    @Override
-                    public Object invoke(V8Object receiver, V8Array parameters) {
-                        List<Object> javaParameters = toList(parameters);
-                        try {
-                            return getV8Result(_this.v8, _this.machine.invoke(address, key, javaParameters.toArray()));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            return null;
+        Map<String, Callback> methods = this.methods(address);
+        if (methods == null) {
+            return null;
+        } else {
+            for (final String key: methods.keySet()) {
+                if (!methods.get(key).getter() && !methods.get(key).setter()) {
+                    proxy.registerJavaMethod(new JavaCallback() {
+                        @Override
+                        public Object invoke(V8Object receiver, V8Array parameters) {
+                            List<Object> javaParameters = toList(parameters);
+                            try {
+                                Object[] results = _this.machine.invoke(address, key, javaParameters.toArray());
+                                List<Object> resultList = new ArrayList<Object>();
+                                Collections.addAll(resultList, results);
+                                return toV8Array(_this.v8, resultList);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                return null;
+                            }
                         }
-                    }
-                }, key);
-            } else {
-                // TODO:implement getters/setters
+                    }, key);
+                } else {
+                    // TODO:implement getters/setters
+                    LogHelper.info("OpenJsComputers does not support getters and setters yet. Go and annoy the mod author until he finally implements them.");
+                }
             }
+            proxy.add("address", address);
+            return proxy;
         }
-        proxy.add("address", address);
-        return proxy;
     }
 
-    @Override
-    public void release() {
-        super.release();
-        for(V8Object primary: this.primaries.values()) {
-            if (!primary.isReleased()) {
-                primary.release();
+    private Map<String, Callback> methods(String address) {
+        for (Node node: this.machine.node().reachableNodes()) {
+            if (node.address().equals(address) && this.machine.node().canBeReachedFrom(node)) {
+                return this.machine.methods(node.host());
             }
         }
+        return null;
     }
 }

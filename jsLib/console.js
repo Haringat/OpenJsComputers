@@ -1,3 +1,10 @@
-/**
- * Created by marcel on 24.10.16.
- */
+"use strict";
+class console {
+    /**
+     *
+     * @param {String} msg
+     */
+    static log(msg) {
+
+    }
+}
