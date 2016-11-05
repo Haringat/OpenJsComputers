@@ -23,10 +23,16 @@ public abstract class DirectApi implements IApi {
         this.setupApi();
     }
 
-    protected void addMethod(String name, JavaCallback callback) {
-        V8Function v8Function = new V8Function(this.eventLoop.getV8(), callback);
-        this.functions.put(name, v8Function);
-        this.eventLoop.getV8().add(name, v8Function);
+    protected void addMethod(final String name, final JavaCallback callback) {
+        final DirectApi _this = this;
+        this.eventLoop.doSynchronized(new Runnable() {
+            @Override
+            public void run() {
+                V8Function v8Function = new V8Function(_this.eventLoop.getV8(), callback);
+                _this.functions.put(name, v8Function);
+                _this.eventLoop.getV8().add(name, v8Function);
+            }
+        });
     }
 
     protected void setupApi() {
@@ -35,12 +41,18 @@ public abstract class DirectApi implements IApi {
 
     @Override
     public void release() {
-        Iterator<String> it = this.functions.keySet().iterator();
-        while (it.hasNext()) {
-            String name = it.next();
-            this.functions.get(name).release();
-            this.eventLoop.getV8().getObject(name).release();
-            it.remove();
-        }
+        final DirectApi _this = this;
+        this.eventLoop.doSynchronized(new Runnable() {
+            @Override
+            public void run() {
+                Iterator<String> it = _this.functions.keySet().iterator();
+                while (it.hasNext()) {
+                    String name = it.next();
+                    _this.functions.get(name).release();
+                    _this.eventLoop.getV8().getObject(name).release();
+                    it.remove();
+                }
+            }
+        });
     }
 }

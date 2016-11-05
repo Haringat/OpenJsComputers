@@ -2,10 +2,12 @@ package com.github.haringat.oc.v8.eventloop;
 
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Locker;
+import li.cil.oc.api.Persistable;
+import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.*;
 
-public class EventLoop {
+public class EventLoop implements Persistable {
 
     private final List<Task> tasks = new ArrayList<Task>();
     private List<ScheduledTask> scheduledTasks = new ArrayList<ScheduledTask>();
@@ -23,21 +25,44 @@ public class EventLoop {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
-                        synchronized (_this.tasks) {
-                            synchronized (_this.v8) {
-                                V8Locker locker = _this.v8.getLocker();
-                                locker.acquire();
-                                for (Task task : tasks) {
-                                    task.execute();
-                                }
-                                locker.release();
-                            }
+                        this.processTaks();
+                    }
+                }
+            }
+
+            private void processTaks() {
+                synchronized (_this.tasks) {
+                    synchronized (_this.v8) {
+                        if (!_this.active) {
+                            return;
                         }
+                        V8Locker locker = _this.v8.getLocker();
+                        locker.acquire();
+                        Iterator<Task> taskIterator = _this.tasks.iterator();
+                        while(taskIterator.hasNext()) {
+                            Task task = taskIterator.next();
+                            task.execute();
+                            taskIterator.remove();
+                        }
+                        locker.release();
                     }
                 }
             }
         });
+        V8Locker locker = this.v8.getLocker();
+        if (locker.hasLock()) {
+            locker.release();
+        }
         this.v8Thread.start();
+    }
+
+    public void doSynchronized(Runnable task) {
+        synchronized (this.v8) {
+            V8Locker locker = this.v8.getLocker();
+            locker.acquire();
+            task.run();
+            locker.release();
+        }
     }
 
     public int schedule(final Task task, long timeout) {
@@ -72,8 +97,8 @@ public class EventLoop {
         return this.scheduledTasks.size() - 1;
     }
 
-    public void cancelScheduledTask(int handle) {
-        this.scheduledTasks.get(handle).cancel();
+    public boolean cancelScheduledTask(int handle) {
+        return this.scheduledTasks.get(handle).cancel();
     }
 
     public Object execute(Task task) {
@@ -97,4 +122,12 @@ public class EventLoop {
         return this.v8;
     }
 
+    @Override
+    public void load(NBTTagCompound nbt) {
+    }
+
+    @Override
+    public void save(NBTTagCompound nbt) {
+
+    }
 }

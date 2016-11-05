@@ -23,13 +23,13 @@ public class System extends ObjectApi {
         super.setupApi();
         final System _this = this;
         this.listeners = new HashMap<String, List<V8Function>>();
-        this.api.registerJavaMethod(new JavaCallback() {
+        this.addMethod("crash", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
                 return getV8Result(_this.eventLoop.getV8(), _this.machine.crash(parameters.getString(0)));
             }
-        }, "crash");
-        this.api.registerJavaMethod(new JavaCallback() {
+        });
+        this.addMethod("on", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
                 if (parameters.length() < 2 || parameters.getType(0) != V8Value.STRING || parameters.getType(1) != V8Value.V8_FUNCTION) {
@@ -45,8 +45,8 @@ public class System extends ObjectApi {
                 listener.release();
                 return null;
             }
-        }, "on");
-        this.api.registerJavaMethod(new JavaCallback() {
+        });
+        this.addMethod("fire", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
                 if (parameters.length() == 0 || parameters.getType(0) != V8Value.STRING) {
@@ -56,7 +56,7 @@ public class System extends ObjectApi {
                 _this.machine.signal(parameters.getString(0), params);
                 return null;
             }
-        }, "fire");
+        });
     }
 
     public void fire(String eventName, V8Array args) {

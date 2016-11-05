@@ -12,10 +12,14 @@ class ScheduledTask {
         this.timer = timer;
     }
 
-    void cancel() {
+    boolean cancel() {
         if (!this.cancelled) {
             this.timer.cancel();
             this.task.cleanUp();
+            this.cancelled = true;
+            return true;
+        } else {
+            return false;
         }
     }
 }

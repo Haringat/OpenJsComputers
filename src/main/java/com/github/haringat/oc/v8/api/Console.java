@@ -14,13 +14,13 @@ public class Console extends ObjectApi {
     protected void setupApi() {
         super.setupApi();
         final Console _this = this;
-        this.api.registerJavaMethod(new JavaVoidCallback() {
+        this.addMethod("log", new JavaVoidCallback() {
             @Override
             public void invoke(V8Object receiver, V8Array parameters) {
                 for (int i = 0; i < parameters.length(); i++) {
                     LogHelper.info(parameters.get(i));
                 }
             }
-        }, "log");
+        });
     }
 }

@@ -70,25 +70,23 @@ public class Timeout extends DirectApi {
         this.addMethod("cancelTimeout", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
-                String usage = "cancelTimeout(number): void";
+                String usage = "cancelTimeout(number): boolean";
                 if (parameters.length() < 1 || parameters.getType(0) != V8Value.INTEGER) {
                     throw new IllegalArgumentException(usage);
                 }
                 int handler = parameters.getInteger(0);
-                _this.eventLoop.cancelScheduledTask(handler);
-                return null;
+                return _this.eventLoop.cancelScheduledTask(handler);
             }
         });
         this.addMethod("cancelInterval", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
-                String usage = "cancelInterval(number): void";
+                String usage = "cancelInterval(number): boolean";
                 if (parameters.length() < 1 || parameters.getType(0) != V8Value.INTEGER) {
                     throw new IllegalArgumentException(usage);
                 }
                 int handler = parameters.getInteger(0);
-                _this.eventLoop.cancelScheduledTask(handler);
-                return null;
+                return _this.eventLoop.cancelScheduledTask(handler);
             }
         });
     }

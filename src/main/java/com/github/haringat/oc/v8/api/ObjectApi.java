@@ -1,9 +1,6 @@
 package com.github.haringat.oc.v8.api;
 
-import com.eclipsesource.v8.JavaCallback;
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Function;
-import com.eclipsesource.v8.V8Object;
+import com.eclipsesource.v8.*;
 import com.github.haringat.oc.api.IApi;
 import com.github.haringat.oc.v8.eventloop.EventLoop;
 import li.cil.oc.api.machine.Machine;
@@ -22,17 +19,45 @@ public abstract class ObjectApi implements IApi {
         this.setupApi();
     }
 
-    protected void addMethod(String name, JavaCallback callback) {
-        this.api.registerJavaMethod(callback, name);
+    protected void addMethod(final String name, final JavaCallback callback) {
+        final ObjectApi _this = this;
+        this.eventLoop.doSynchronized(new Runnable() {
+            @Override
+            public void run() {
+                _this.api.registerJavaMethod(callback, name);
+            }
+        });
+    }
+
+    protected void addMethod(final String name, final JavaVoidCallback callback) {
+        final ObjectApi _this = this;
+        this.eventLoop.doSynchronized(new Runnable() {
+            @Override
+            public void run() {
+                _this.api.registerJavaMethod(callback, name);
+            }
+        });
     }
 
     public void release() {
-        this.api.release();
+        final ObjectApi _this = this;
+        this.eventLoop.doSynchronized(new Runnable() {
+            @Override
+            public void run() {
+                _this.api.release();
+            }
+        });
         this.api = null;
     }
 
     protected void setupApi() {
-        this.api = new V8Object(this.eventLoop.getV8());
-        this.eventLoop.getV8().add(this.name, this.api);
+        final ObjectApi _this = this;
+        this.eventLoop.doSynchronized(new Runnable() {
+            @Override
+            public void run() {
+                _this.api = new V8Object(_this.eventLoop.getV8());
+                _this.eventLoop.getV8().add(_this.name, _this.api);
+            }
+        });
     }
 }
