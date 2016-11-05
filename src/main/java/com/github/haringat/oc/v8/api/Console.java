@@ -2,13 +2,12 @@ package com.github.haringat.oc.v8.api;
 
 import com.eclipsesource.v8.*;
 import com.github.haringat.LogHelper;
-import com.github.haringat.OpenJsComputers;
-import com.github.haringat.oc.v8.Utils;
+import com.github.haringat.oc.v8.eventloop.EventLoop;
 import li.cil.oc.api.machine.Machine;
 
-public class Console extends ApiBase {
-    public Console(V8 v8, Machine machine) {
-        super(v8, "console", machine);
+public class Console extends ObjectApi {
+    public Console(EventLoop eventLoop, Machine machine) {
+        super(eventLoop, "console", machine);
     }
 
     @Override
@@ -19,13 +18,7 @@ public class Console extends ApiBase {
             @Override
             public void invoke(V8Object receiver, V8Array parameters) {
                 for (int i = 0; i < parameters.length(); i++) {
-                    if (parameters.get(i) instanceof String) {
-                        LogHelper.info(parameters.get(i));
-                    } else {
-                        V8Array params = (V8Array) Utils.toV8Value(new Object[]{parameters.get(i)}, _this.v8, null);
-                        LogHelper.info(_this.v8.getObject("JSON").executeStringFunction("stringify", params));
-                        params.release();
-                    }
+                    LogHelper.info(parameters.get(i));
                 }
             }
         }, "log");

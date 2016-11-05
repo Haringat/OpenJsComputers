@@ -4,16 +4,18 @@ import com.eclipsesource.v8.*;
 
 import static com.eclipsesource.v8.utils.V8ObjectUtils.*;
 
+import com.github.haringat.oc.v8.eventloop.EventLoop;
+import com.github.haringat.oc.v8.eventloop.Task;
 import li.cil.oc.api.machine.Machine;
 
 import java.util.*;
 
-public class System extends ApiBase {
+public class System extends ObjectApi {
 
     private Map<String, List<V8Function>> listeners;
 
-    public System(V8 v8, Machine machine) {
-        super(v8, "system", machine);
+    public System(EventLoop eventLoop, Machine machine) {
+        super(eventLoop, "system", machine);
     }
 
     @Override
@@ -24,7 +26,7 @@ public class System extends ApiBase {
         this.api.registerJavaMethod(new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
-                return getV8Result(_this.v8, _this.machine.crash(parameters.getString(0)));
+                return getV8Result(_this.eventLoop.getV8(), _this.machine.crash(parameters.getString(0)));
             }
         }, "crash");
         this.api.registerJavaMethod(new JavaCallback() {
@@ -61,7 +63,7 @@ public class System extends ApiBase {
         for (String name: this.listeners.keySet()) {
             if (name.equals(eventName)) {
                 for (V8Function listener: this.listeners.get(name)) {
-                    listener.call(null, args);
+                    this.eventLoop.schedule(new Task(listener, null, args), 0);
                 }
                 break;
             }
