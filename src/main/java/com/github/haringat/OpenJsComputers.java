@@ -43,7 +43,7 @@ public class OpenJsComputers {
         LogHelper.info("OpenJsComputers is initializing...");
         Machine.add(V8Architecture.class);
 
-        InputStream in = getClass().getResourceAsStream("/assets/OpenJsComputers/bios.js");
+        InputStream in = getClass().getResourceAsStream("/assets/openJsComputers/bios.js");
         BufferedReader input = new BufferedReader(new InputStreamReader(in));
         String bios = "";
         String line;

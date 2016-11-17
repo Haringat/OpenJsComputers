@@ -23,7 +23,7 @@ public class Timeout extends DirectApi {
         this.addMethod("setTimeout", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, final V8Array parameters) {
-                String usage = "setTimeout((...any) => void, number, ...any): number";
+                String usage = "Usage: setTimeout(([...any]) => void, [number], [...any]): number";
                 if (parameters.length() < 1 || parameters.getType(0) != V8Value.V8_FUNCTION) {
                     throw new IllegalArgumentException(usage);
                 }
@@ -51,7 +51,7 @@ public class Timeout extends DirectApi {
         this.addMethod("setInterval", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
-                String usage = "setInterval((...any) => void, number, ...any): number";
+                String usage = "Usage: setInterval((...any) => void, number, [...any]): number";
                 if (parameters.length() < 2 || parameters.getType(0) != V8Value.V8_FUNCTION || parameters.getType(1) != V8Value.INTEGER) {
                     throw new IllegalArgumentException(usage);
                 }

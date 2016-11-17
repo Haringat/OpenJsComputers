@@ -20,6 +20,18 @@ public class Task {
         this.arguments = arguments;
     }
 
+    V8Function getFunction() {
+        return this.function;
+    }
+
+    V8Object getThisArg() {
+        return this.thisArg;
+    }
+
+    V8Array getArguments() {
+        return this.arguments;
+    }
+
     void cleanUp() {
         this.function.release();
         for (int i = 0; i < this.arguments.length(); i++) {

@@ -1,22 +1,26 @@
 package com.github.haringat.oc.v8.eventloop;
 
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Locker;
+import com.eclipsesource.v8.*;
+import com.eclipsesource.v8.utils.MemoryManager;
 import li.cil.oc.api.Persistable;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 
 import java.util.*;
 
 public class EventLoop implements Persistable {
 
     private final List<Task> tasks = new ArrayList<Task>();
-    private List<ScheduledTask> scheduledTasks = new ArrayList<ScheduledTask>();
+    private final List<ScheduledTask> scheduledTasks = new ArrayList<ScheduledTask>();
     private boolean active = true;
     private final V8 v8;
     private Thread v8Thread;
+    private MemoryManager memoryManager;
 
     public EventLoop(V8 v8) {
         this.v8 = v8;
+        this.memoryManager = new MemoryManager(this.v8);
         final EventLoop _this = this;
         this.v8Thread = new Thread(new Runnable() {
             @Override
@@ -25,12 +29,12 @@ public class EventLoop implements Persistable {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
-                        this.processTaks();
+                        this.processTasks();
                     }
                 }
             }
 
-            private void processTaks() {
+            private void processTasks() {
                 synchronized (_this.tasks) {
                     synchronized (_this.v8) {
                         if (!_this.active) {
@@ -63,6 +67,23 @@ public class EventLoop implements Persistable {
             task.run();
             locker.release();
         }
+    }
+
+    public void evalAsync(final Runnable task) {
+        synchronized (this.v8) {
+            this.schedule(new Task(new V8Function(this.v8, new JavaCallback() {
+                @Override
+                public Object invoke(V8Object receiver, V8Array parameters) {
+                    task.run();
+                    return null;
+                }
+            }), null, new V8Array(this.v8)));
+            this.v8Thread.interrupt();
+        }
+    }
+
+    public int schedule(final Task task) {
+        return this.schedule(task, 0);
     }
 
     public int schedule(final Task task, long timeout) {
@@ -112,9 +133,12 @@ public class EventLoop implements Persistable {
     }
 
     public void shutDown() {
-        this.active = false;
-        for (ScheduledTask task: this.scheduledTasks) {
-            task.cancel();
+        synchronized (this.v8) {
+            this.active = false;
+            for (ScheduledTask task: this.scheduledTasks) {
+                task.cancel();
+            }
+            this.memoryManager.release();
         }
     }
 
@@ -128,6 +152,5 @@ public class EventLoop implements Persistable {
 
     @Override
     public void save(NBTTagCompound nbt) {
-
     }
 }

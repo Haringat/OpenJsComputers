@@ -56,8 +56,9 @@ public class Component extends ObjectApi {
         this.addMethod("getPrimary", new JavaCallback() {
             @Override
             public Object invoke(V8Object receiver, V8Array parameters) {
+                String usage = "component.getPrimary(string): {[key: string]: Function}";
                 if (parameters.length() < 1 || parameters.getType(0) != V8Value.STRING) {
-                    throw new IllegalArgumentException("component.getPrimary(string): {[key: string]: string}");
+                    throw new IllegalArgumentException(usage);
                 }
                 Map<String, String> components = _this.machine.components();
                 for(String address: components.keySet()) {
@@ -101,6 +102,7 @@ public class Component extends ObjectApi {
             return null;
         } else {
             for (final String key: methods.keySet()) {
+                LogHelper.info(methods.get(key).value());
                 if (!methods.get(key).getter() && !methods.get(key).setter()) {
                     proxy.registerJavaMethod(new JavaCallback() {
                         @Override

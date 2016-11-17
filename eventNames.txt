@@ -1,0 +1,5 @@
+touch
+key_down
+key_up
+component_added
+component_removed

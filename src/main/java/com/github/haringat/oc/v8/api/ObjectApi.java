@@ -8,10 +8,12 @@ import li.cil.oc.api.machine.Machine;
 public abstract class ObjectApi implements IApi {
 
     protected final Machine machine;
-    protected final String name;
+    private final String name;
     protected V8Object api;
+    @SuppressWarnings("WeakerAccess")
     protected EventLoop eventLoop;
 
+    @SuppressWarnings("WeakerAccess")
     protected ObjectApi(EventLoop eventLoop, String name, Machine machine) {
         this.eventLoop = eventLoop;
         this.machine = machine;
@@ -19,6 +21,7 @@ public abstract class ObjectApi implements IApi {
         this.setupApi();
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected void addMethod(final String name, final JavaCallback callback) {
         final ObjectApi _this = this;
         this.eventLoop.doSynchronized(new Runnable() {
@@ -29,6 +32,7 @@ public abstract class ObjectApi implements IApi {
         });
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected void addMethod(final String name, final JavaVoidCallback callback) {
         final ObjectApi _this = this;
         this.eventLoop.doSynchronized(new Runnable() {

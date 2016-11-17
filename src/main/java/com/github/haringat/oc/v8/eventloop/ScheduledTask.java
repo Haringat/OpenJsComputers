@@ -5,7 +5,7 @@ import java.util.Timer;
 class ScheduledTask {
     private Task task;
     private Timer timer;
-    boolean cancelled = false;
+    private boolean cancelled = false;
 
     ScheduledTask(Task task, Timer timer) {
         this.task = task;
