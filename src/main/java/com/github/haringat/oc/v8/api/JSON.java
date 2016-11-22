@@ -15,16 +15,20 @@ import static com.eclipsesource.v8.utils.V8ObjectUtils.*;
 
 public class JSON extends ObjectApi {
 
-    //private static final String tokens = "(\"[^\\\\\"\\p{Cntrl}]*\"){0}(true|false){0}(null){0}(-?[\\\\d]*(?:\\.[\\d]*)?(?:[eE][+-]?[\\d]*)?){0}(\\{\\s*(?:((?:1))\\s*:\\s*((?:1)|(?:2)|(?:3)|(?:4)|(?:5)|(?:10))\\s*(?:,\\s*((?:1))\\s*:\\s*((?:1)|(?:2)|(?:3)|(?:4)|(?:5)|(?:10))\\s*)*)?\\}){0}(\\[(\\s*(?:(?:1)|(?:2)|(?:3)|(?:4)|(?:5)|(?:10))\\s*(?:,\\s*((?:1)|(?:2)|(?:3)|(?:4)|(?:5)|(?:10))\\s*)*)]){0}";
-    private static final String tokens = "(\"[^\\\\\"\\p{Cntrl}]*\"){0}(true|false){0}(null){0}(-?[\\\\d]*(?:\\.[\\d]*)?(?:[eE][+-]?[\\d]*)?){0}(\\{\\s*(?:((?1))\\s*:\\s*((?1)|(?2)|(?3)|(?4)|(?5)|(?10))\\s*(?:,\\s*((?1))\\s*:\\s*((?1)|(?2)|(?3)|(?4)|(?10)|(?8))\\s*)*)?\\}){0}(\\[(\\s*(?:(?1)|(?2)|(?3)|(?4)|(?5)|(?10))\\s*(?:,\\s*((?1)|(?2)|(?3)|(?4)|(?5)|(?10))\\s*)*)]){0}";
-    //private static final String tokens = "(\"[^\\\\\"\\p{Cntrl}]*\"){0}(true|false){0}(null){0}(-?[\\d]*(?:\\.[\\d]*)?(?:[eE][+-]?[\\d]*)?){0}(\\{\\s*(?:(?1)\\s*:\\s*((?1)|(?2)|(?3)|(?4)|(?5)|(?8))\\s*(?:,\\s*(?1)\\s*:\\s*((?1)|(?2)|(?3)|(?4)|(?5)|(?8))\\s*)*)?\\}){0}((?#array)\\[(\\s*(?:(?1)|(?2)|(?3)|(?4)|(?5)|(?8))\\s*(?:,\\s*(?:(?1)|(?2)|(?3)|(?4)|(?5)|(?8))\\s*)*)]){0}";
-    //private static final String tokens = "(?'boolean'true|false){0}(?'string'\"[^\\\\\"\\p{Cntrl}]*\"){0}(?'null'null){0}(?'number'-?[\\d]*(?:\\.[\\d]*)?(?:[eE][+-]?[\\d]*)?){0}(?'object'\\{\\s*((?&string))\\s*:\\s*((?&boolean)|(?&string)|(?&null)|(?&number)|(?&array)|(?&object))\\s*(?:,\\s*((?&string))\\s*:\\s*((?&boolean)|(?&string)|(?&null)|(?&number)|(?&array)|(?&object))\\s*)*\\}){0}(?'array'\\[\\s((?&boolean)|(?&string)|(?&null)|(?&number)|(?&array)|(?&object)\\s)*]){0}";
-    private static final Pattern stringPattern = Pattern.compile(tokens + "(?:1)");
-    private static final Pattern boolPattern = Pattern.compile(tokens + "(?:2)");
-    private static final Pattern nullPattern = Pattern.compile(tokens + "(?:3)");
-    private static final Pattern numberPattern = Pattern.compile(tokens + "(?:4)");
-    private static final Pattern objectPattern = Pattern.compile(tokens + "(?:5)");
-    private static final Pattern arrayPattern = Pattern.compile(tokens + "(?:8)");
+
+    private static final String stringToken = "\"([^\\\\\"\\p{Cntrl}]+)?\"";
+    private static final String booleanToken = "(true|false)";
+    private static final String nullToken = "(null)";
+    private static final String numberToken = "(-?[\\d]*(?:\\.[\\d]*)?(?:[eE][+-]?[\\d]*)?)";
+    private static final String objectToken = "\\{\\s*(?:((?&string))\\s*:\\s*((?&any))\\s*(?:,\\s*((?&string))\\s*:\\s*((?&any))\\s*)*)?}";
+    private static final String arrayToken = "\\[\\s*(?:((?&any))\\s*(?:,\\s*((?any))\\s*)*)?]";
+    private static final String groups = "(?(DEFINE)(?<string>" + stringToken + ")(?<boolean>" + booleanToken + ")(?<null>" + nullToken + ")(?<number>" + numberToken + ")(?<object>" + objectToken + ")(?<array>" + arrayToken + ")(?<any>(?&string)|(?&boolean)|(?&null)|(?&number)|(?&object)|(?&array)))";
+    private static final Pattern stringPattern = Pattern.compile(stringToken);
+    private static final Pattern boolPattern = Pattern.compile(booleanToken);
+    private static final Pattern nullPattern = Pattern.compile(nullToken);
+    private static final Pattern numberPattern = Pattern.compile(numberToken);
+    private static final Pattern objectPattern = Pattern.compile(groups + objectToken);
+    private static final Pattern arrayPattern = Pattern.compile(groups + arrayToken);
 
 
     public JSON(EventLoop eventLoop, Machine machine) {
@@ -136,42 +140,55 @@ public class JSON extends ObjectApi {
         }
     }
 
-    private Object parse(String string) {
-        if (string.matches(objectPattern.pattern())) {
+    private Object parse(String token) throws JSONException {
+        if (token.matches(objectPattern.pattern())) {
             Map<String, Object> resultMap = new HashMap<String, Object>();
-            Matcher objectMatcher = objectPattern.matcher(string);
+            Matcher objectMatcher = objectPattern.matcher(token);
             for (int i = 1; i <= objectMatcher.groupCount(); i += 2) {
+                if (!objectMatcher.group(i).matches(stringPattern.pattern())) {
+                    throw new JSONParsingException("object key is not a string");
+                }
                 resultMap.put(objectMatcher.group(i), this.parse(objectMatcher.group(i + 1)));
             }
             return toV8Object(this.eventLoop.getV8(), resultMap);
-        } else if (string.matches(arrayPattern.pattern())) {
+        } else if (token.matches(arrayPattern.pattern())) {
             List<Object> resultList = new ArrayList<Object>();
-            Matcher arrayMatcher = arrayPattern.matcher(string);
+            Matcher arrayMatcher = arrayPattern.matcher(token);
             for (int i = 1; i <= arrayMatcher.groupCount(); i++) {
                 resultList.add(this.parse(arrayMatcher.group(i)));
             }
             return toV8Array(this.eventLoop.getV8(), resultList);
-        } else if (string.matches(stringPattern.pattern())) {
-            Matcher stringMatcher = stringPattern.matcher(string);
+        } else if (token.matches(stringPattern.pattern())) {
+            Matcher stringMatcher = stringPattern.matcher(token);
             return stringMatcher.group(1);
-        } else if (string.matches(boolPattern.pattern())) {
-            Matcher boolMatcher = boolPattern.matcher(string);
+        } else if (token.matches(boolPattern.pattern())) {
+            Matcher boolMatcher = boolPattern.matcher(token);
             return Boolean.valueOf(boolMatcher.group(1));
-        } else if (string.matches(numberPattern.pattern())) {
-            Matcher numberMatcher = numberPattern.matcher(string);
+        } else if (token.matches(numberPattern.pattern())) {
+            Matcher numberMatcher = numberPattern.matcher(token);
             return Double.valueOf(numberMatcher.group(1));
-        } else if (string.matches(nullPattern.pattern())) {
+        } else if (token.matches(nullPattern.pattern())) {
             return null;
         } else {
-            return new JSONOutOfPatternsExceptions(string);
+            throw new JSONOutOfPatternsExceptions(token);
         }
     }
 
-    private class JSONOutOfPatternsExceptions extends Exception {
+    private class JSONException extends Exception {
+        JSONException(String cause) {
+            super(cause);
+        }
+    }
 
+    private class JSONOutOfPatternsExceptions extends JSONException {
         JSONOutOfPatternsExceptions(String cause) {
             super("Could not find pattern for: " + cause);
         }
+    }
 
+    private class JSONParsingException extends JSONException {
+        JSONParsingException(String cause) {
+            super("Syntax error: " + cause);
+        }
     }
 }
