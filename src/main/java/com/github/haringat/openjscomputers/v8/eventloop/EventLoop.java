@@ -1,11 +1,9 @@
-package com.github.haringat.oc.v8.eventloop;
+package com.github.haringat.openjscomputers.v8.eventloop;
 
 import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.MemoryManager;
 import li.cil.oc.api.Persistable;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package com.github.haringat.oc.api;
+package com.github.haringat.openjscomputers.api;
 
 public interface IApi {
 

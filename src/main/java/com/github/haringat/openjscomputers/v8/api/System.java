@@ -1,11 +1,11 @@
-package com.github.haringat.oc.v8.api;
+package com.github.haringat.openjscomputers.v8.api;
 
 import com.eclipsesource.v8.*;
 
 import static com.eclipsesource.v8.utils.V8ObjectUtils.*;
 
-import com.github.haringat.oc.v8.eventloop.EventLoop;
-import com.github.haringat.oc.v8.eventloop.Task;
+import com.github.haringat.openjscomputers.v8.eventloop.EventLoop;
+import com.github.haringat.openjscomputers.v8.eventloop.Task;
 import li.cil.oc.api.machine.Machine;
 
 import java.util.*;

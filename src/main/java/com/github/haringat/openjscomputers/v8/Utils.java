@@ -1,4 +1,4 @@
-package com.github.haringat.oc.v8;
+package com.github.haringat.openjscomputers.v8;
 
 import com.eclipsesource.v8.*;
 

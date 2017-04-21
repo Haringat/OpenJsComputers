@@ -1,6 +1,6 @@
-package com.github.haringat.oc;
+package com.github.haringat.openjscomputers;
 
-import com.github.haringat.oc.api.IApi;
+import com.github.haringat.openjscomputers.api.IApi;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.Item;
 import li.cil.oc.api.driver.item.Memory;

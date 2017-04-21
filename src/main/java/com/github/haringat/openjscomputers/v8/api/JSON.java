@@ -1,10 +1,10 @@
-package com.github.haringat.oc.v8.api;
+package com.github.haringat.openjscomputers.v8.api;
 
 import com.eclipsesource.v8.JavaCallback;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 import com.eclipsesource.v8.V8Value;
-import com.github.haringat.oc.v8.eventloop.EventLoop;
+import com.github.haringat.openjscomputers.v8.eventloop.EventLoop;
 import li.cil.oc.api.machine.Machine;
 
 import java.util.*;
@@ -15,21 +15,21 @@ import static com.eclipsesource.v8.utils.V8ObjectUtils.*;
 
 public class JSON extends ObjectApi {
 
-
-    private static final String stringToken = "\"([^\\\\\"\\p{Cntrl}]+)?\"";
+    private static final String patternStart = "^\\s*";
+    private static final String patternEnd = "\\s*$";
+    private static final String stringToken = "\"((?:(?:\\\\(?:\\\"|\\\\|\\/|b|f|n|r|t|u\\d{4}))|[^\\\\\"\\p{Cntrl}])+)?\"";
     private static final String booleanToken = "(true|false)";
     private static final String nullToken = "(null)";
-    private static final String numberToken = "(-?[\\d]*(?:\\.[\\d]*)?(?:[eE][+-]?[\\d]*)?)";
-    private static final String objectToken = "\\{\\s*(?:((?&string))\\s*:\\s*((?&any))\\s*(?:,\\s*((?&string))\\s*:\\s*((?&any))\\s*)*)?}";
-    private static final String arrayToken = "\\[\\s*(?:((?&any))\\s*(?:,\\s*((?any))\\s*)*)?]";
+    private static final String numberToken = "(-?(?:[\\d]+|(?:\\.[\\d]*)|[\\d]+\\.[\\d]+)(?:[eE][+-]?[\\d]+)?)";
+    private static final String objectToken = "\\{\\s*(?:((?string))\\s*:\\s*((?any))\\s*(?:,\\s*((?&string))\\s*:\\s*((?&any))\\s*)*)?}";
+    private static final String arrayToken = "\\[\\s*(?:((?&any))\\s*(?:,\\s*((?&any))\\s*)*)?]";
     private static final String groups = "(?(DEFINE)(?<string>" + stringToken + ")(?<boolean>" + booleanToken + ")(?<null>" + nullToken + ")(?<number>" + numberToken + ")(?<object>" + objectToken + ")(?<array>" + arrayToken + ")(?<any>(?&string)|(?&boolean)|(?&null)|(?&number)|(?&object)|(?&array)))";
-    private static final Pattern stringPattern = Pattern.compile(stringToken);
-    private static final Pattern boolPattern = Pattern.compile(booleanToken);
-    private static final Pattern nullPattern = Pattern.compile(nullToken);
-    private static final Pattern numberPattern = Pattern.compile(numberToken);
-    private static final Pattern objectPattern = Pattern.compile(groups + objectToken);
-    private static final Pattern arrayPattern = Pattern.compile(groups + arrayToken);
-
+    private static final Pattern stringPattern = Pattern.compile(patternStart + stringToken + patternEnd);
+    private static final Pattern boolPattern = Pattern.compile(patternStart + booleanToken + patternEnd);
+    private static final Pattern nullPattern = Pattern.compile(patternStart + nullToken + patternEnd);
+    private static final Pattern numberPattern = Pattern.compile(patternStart + numberToken + patternEnd);
+    private static final Pattern objectPattern = Pattern.compile(groups + patternStart + objectToken + patternEnd);
+    private static final Pattern arrayPattern = Pattern.compile(groups + patternStart + arrayToken + patternEnd);
 
     public JSON(EventLoop eventLoop, Machine machine) {
         super(eventLoop, "JSON", machine);

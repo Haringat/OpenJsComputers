@@ -1,4 +1,4 @@
-package com.github.haringat.oc.v8.eventloop;
+package com.github.haringat.openjscomputers.v8.eventloop;
 
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Function;

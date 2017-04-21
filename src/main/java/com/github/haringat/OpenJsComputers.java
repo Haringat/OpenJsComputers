@@ -1,6 +1,6 @@
 package com.github.haringat;
 
-import com.github.haringat.oc.v8.V8Architecture;
+import com.github.haringat.openjscomputers.v8.V8Architecture;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.Mod;

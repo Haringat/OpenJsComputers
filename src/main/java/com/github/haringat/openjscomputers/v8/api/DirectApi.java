@@ -1,10 +1,9 @@
-package com.github.haringat.oc.v8.api;
+package com.github.haringat.openjscomputers.v8.api;
 
 import com.eclipsesource.v8.JavaCallback;
-import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Function;
-import com.github.haringat.oc.api.IApi;
-import com.github.haringat.oc.v8.eventloop.EventLoop;
+import com.github.haringat.openjscomputers.api.IApi;
+import com.github.haringat.openjscomputers.v8.eventloop.EventLoop;
 import li.cil.oc.api.machine.Machine;
 
 import java.util.HashMap;

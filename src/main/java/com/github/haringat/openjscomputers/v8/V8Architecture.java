@@ -1,11 +1,11 @@
-package com.github.haringat.oc.v8;
+package com.github.haringat.openjscomputers.v8;
 
 import com.eclipsesource.v8.*;
 import com.github.haringat.LogHelper;
-import com.github.haringat.oc.JSArchitecture;
-import com.github.haringat.oc.v8.api.*;
-import com.github.haringat.oc.v8.api.System;
-import com.github.haringat.oc.v8.eventloop.EventLoop;
+import com.github.haringat.openjscomputers.JSArchitecture;
+import com.github.haringat.openjscomputers.v8.api.*;
+import com.github.haringat.openjscomputers.v8.api.System;
+import com.github.haringat.openjscomputers.v8.eventloop.EventLoop;
 import li.cil.oc.api.machine.Machine;
 import li.cil.oc.api.machine.ExecutionResult;
 import li.cil.oc.api.machine.Signal;

@@ -15,8 +15,37 @@ buildscript {
     }
 }
 
+apply plugin: "forge"
+apply plugin: "signing"
 
-apply plugin: 'forge'
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = "javadoc"
+    from javadoc
+}
+
+task compile (type: JavaCompile)
+
+task apiJar(type: Jar) {
+    classifier = "api"
+    from fileTree(dir: "src/main/java").matching {
+        include "com/github/haringat/openjscomputers/api/**"
+        include "com/github/haringat/openjscomputers/v8/api/DirectApi"
+        include "com/github/haringat/openjscomputers/v8/api/ObjectApi"
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = "sources"
+    from fileTree(dir: "src/main/java")
+}
+
+artifacts {
+    archives javadocJar, sourcesJar, apiJar
+}
+
+signing {
+    sign configurations.archives
+}
 
 file "build.properties" withReader {
     def prop = new Properties()
@@ -74,9 +103,9 @@ dependencies {
 
 }
 
-jar {
+/*jar {
     from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
-}
+}*/
 
 processResources
 {
@@ -95,5 +124,49 @@ processResources
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            authentication(userName: ossrhUsername, password: ossrhPassword)
+        }
+
+        snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+            authentication(userName: ossrhUsername, password: ossrhPassword)
+        }
+
+        pom.project {
+            name "OpenJsComputers"
+            packaging "jar"
+            // optionally artifactId can be defined here
+            description "Adds an ECMAScript (JavaScript) based architecture to OpenComputers."
+            url "https://www.github.com/Haringat/JPromise"
+
+            scm {
+                connection "scm:git:git://github.com/Haringat/OpenJsComputers.git"
+                developerConnection "scm:git:ssh://github.com:Haringat/OpenJsComputers.git"
+                url "https://github.com/Haringat/OpenJsComputers"
+            }
+
+            licenses {
+                license {
+                    name "MIT License"
+                    url "http://opensource.org/licenses/MIT"
+                }
+            }
+
+            developers {
+                developer {
+                    id "Haringat"
+                    organizationUrl "https://github.com/Haringat"
+                    name "Marcel Mundl"
+                    email "Marcel@Mundlhome.de"
+                }
+            }
+        }
     }
 }
